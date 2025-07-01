@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IT Podrška - Rješavanje problema</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 30px auto;
+      padding: 10px 20px;
+      background: #f4f7f9;
+      color: #333;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #0066cc;
+    }
+    .menu, .step {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    button {
+      background-color: #007bff;
+      border: none;
+      color: white;
+      padding: 12px 20px;
+      margin: 8px 0;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #backBtn {
+      background-color: #6c757d;
+      margin-top: 20px;
+    }
+    #backBtn:hover {
+      background-color: #5a6268;
+    }
+    p {
+      font-size: 18px;
+      line-height: 1.4;
+    }
+    #searchInput {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+    #feedbackForm {
+      margin-top: 30px;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    #feedbackForm select, #feedbackForm textarea {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    #feedbackForm textarea {
+      resize: vertical;
+    }
+  </style>
+</head>
+<body>
+  <h1>IT Podrška - Rješavanje problema</h1>
+  <div id="app"></div>
+
+  <div id="feedbackForm">
+    <h2>Ne možete pronaći rješenje?</h2>
+    <p>Pošaljite svoj problem IT podršci:</p>
+    <select id="problemSelect">
+      <option value="">Odaberite problem</option>
+      <option value="WiFi ne radi">WiFi ne radi</option>
+      <option value="Računalo je sporo">Računalo je sporo</option>
+      <option value="Zvuk ne radi">Zvuk ne radi</option>
+      <option value="Printer ne radi">Printer ne radi</option>
+    </select>
+    <textarea id="messageInput" rows="4" placeholder="Opišite svoj problem..."></textarea>
+    <button onclick="sendFeedback()">Pošalji upit IT podršci</button>
+    <p id="feedbackResponse" style="margin-top: 10px; color: green;"></p>
+  </div>
+
+  <script>
+    const problems = {
+      start: {
+        text: "Odaberite problem koji imate:",
+        options: [
+          { text: "WiFi ne radi", next: "wifi1" },
+          { text: "Računalo je sporo", next: "slow1" },
+          { text: "Zvuk ne radi", next: "sound1" },
+          { text: "Printer ne radi", next: "printer1" }
+        ]
+      },
+      wifi1: { text: "Jeste li spojeni na WiFi mrežu?", options: [{text:"Da", next:"wifi2"}, {text:"Ne", next:"wifi_connect"}] },
+      wifi_connect: { text: "Pokušajte se spojiti na dostupnu WiFi mrežu kroz postavke računala. Je li problem riješen?", options: [{text:"Da, hvala!", next:"end"}, {text:"Ne, još uvijek ne radi", next:"wifi_reset"}] },
+      wifi2: { text: "Jeste li pokušali restartati router?", options: [{text:"Da", next:"wifi3"}, {text:"Ne", next:"wifi_reset"}] },
+      wifi_reset: { text: "Isključite router iz struje na 30 sekundi, pa ga ponovno uključite. Je li problem riješen?", options: [{text:"Da, radi sada", next:"end"}, {text:"Ne, i dalje ne radi", next:"wifi_contact"}] },
+      wifi3: { text: "Jeste li pokušali restartati računalo?", options: [{text:"Da, još uvijek ne radi", next:"wifi_contact"}, {text:"Ne, pokušat ću", next:"end"}] },
+      wifi_contact: { text: "Preporučujemo da kontaktirate vašeg ISP-a ili IT administratora.", options: [{text:"Vrati na početak", next:"start"}] },
+      slow1: { text: "Jeste li nedavno instalirali novi softver?", options: [{text:"Da", next:"slow2"}, {text:"Ne", next:"slow3"}] },
+      slow2: { text: "Pokušajte deinstalirati taj softver ili napraviti restart računala. Je li problem riješen?", options: [{text:"Da, hvala!", next:"end"}, {text:"Ne, još uvijek je sporo", next:"slow3"}] },
+      slow3: { text: "Provjerite ima li dovoljno slobodnog prostora na disku i zatvorite nepotrebne programe.", options: [{text:"Probao sam, ništa se nije promijenilo", next:"slow4"}, {text:"Još nisam, pokušat ću", next:"end"}] },
+      slow4: { text: "Preporučujemo skeniranje računala antivirusom ili da potražite pomoć IT stručnjaka.", options: [{text:"Vrati na početak", next:"start"}] },
+      sound1: { text: "Jeste li spojeni na zvučnike ili slušalice?", options: [{text:"Da", next:"sound2"}, {text:"Ne", next:"sound_connect"}] },
+      sound_connect: { text: "Spojite zvučnike ili slušalice. Je li zvuk sada ispravan?", options: [{text:"Da, hvala!", next:"end"}, {text:"Ne, zvuk i dalje ne radi", next:"sound_check"}] },
+      sound2: { text: "Jeste li provjerili glasnoću i nije li isključen zvuk?", options: [{text:"Da, glasnoća je uključena", next:"sound3"}, {text:"Ne, provjerit ću", next:"end"}] },
+      sound3: { text: "Pokušajte restartati računalo. Je li problem riješen?", options: [{text:"Da, hvala!", next:"end"}, {text:"Ne, problem i dalje postoji", next:"sound_contact"}] },
+      sound_contact: { text: "Preporučujemo da kontaktirate IT podršku za detaljniju pomoć.", options: [{text:"Vrati na početak", next:"start"}] },
+      printer1: { text: "Je li printer uključen i spojen na računalo?", options: [{text:"Da", next:"printer2"}, {text:"Ne", next:"printer_connect"}] },
+      printer_connect: { text: "Uključite printer i spojite ga na računalo. Je li printer sada dostupan?", options: [{text:"Da", next:"end"}, {text:"Ne", next:"printer_contact"}] },
+      printer2: { text: "Jeste li pokušali restartati printer i računalo?", options: [{text:"Da", next:"printer3"}, {text:"Ne", next:"end"}] },
+      printer3: { text: "Provjerite ima li printer dovoljno papira i nije li zapela neka stranica.", options: [{text:"Sve je u redu, ali i dalje ne radi", next:"printer_contact"}, {text:"Problemi riješeni", next:"end"}] },
+      printer_contact: { text: "Kontaktirajte IT podršku ili servis za printere.", options: [{text:"Vrati na početak", next:"start"}] },
+      end: { text: "Drago nam je da smo pomogli! Ako imate još pitanja, slobodno krenite iz početka.", options: [{text:"Vrati na početak", next:"start"}] }
+    };
+
+    const appDiv = document.getElementById("app");
+    let currentStep = "start";
+    let historyStack = [];
+
+    function renderStep(stepKey) {
+      const step = problems[stepKey];
+      if (!step) {
+        appDiv.innerHTML = "<p>Greška: Nepoznat korak.</p>";
+        return;
+      }
+
+      let html = `<div class="step">`;
+
+      if (stepKey === "start") {
+        html += `<input type="text" id="searchInput" placeholder="Pretraži probleme..." oninput="searchProblems(event)" autocomplete="off" />`;
+      }
+
+      html += `<h2>${step.text}</h2>`;
+      for (const option of step.options) {
+        html += `<button onclick="chooseOption('${option.next}')">${option.text}</button>`;
+      }
+      if (historyStack.length > 0) {
+        html += `<button id="backBtn" onclick="goBack()">Nazad</button>`;
+      }
+      html += `</div>`;
+      appDiv.innerHTML = html;
+    }
+
+    function chooseOption(nextKey) {
+      historyStack.push(currentStep);
+      currentStep = nextKey;
+      renderStep(currentStep);
+    }
+
+    function goBack() {
+      if (historyStack.length === 0) return;
+      currentStep = historyStack.pop();
+      renderStep(currentStep);
+    }
+
+    function searchProblems(event) {
+      const searchTerm = event.target.value.toLowerCase();
+      const filteredOptions = problems.start.options.filter(opt => opt.text.toLowerCase().includes(searchTerm));
+
+      let html = `<div class="step">`;
+      html += `<input type="text" id="searchInput" placeholder="Pretraži probleme..." value="${event.target.value}" oninput="searchProblems(event)" autocomplete="off" />`;
+      html += `<h2>Odaberite problem koji imate:</h2>`;
+
+      if (filteredOptions.length === 0) {
+        html += `<p>Nema rezultata za '${event.target.value}'.</p>`;
+      } else {
+        for (const option of filteredOptions) {
+          html += `<button onclick="chooseOption('${option.next}')">${option.text}</button>`;
+        }
+      }
+      html += `</div>`;
+      appDiv.innerHTML = html;
+
+      historyStack = [];
+      currentStep = "start";
+    }
+
+    function sendFeedback() {
+      const problem = document.getElementById('problemSelect').value;
+      const message = document.getElementById('messageInput').value.trim();
+      const responseP = document.getElementById('feedbackResponse');
+      responseP.style.color = "green";
+
+      if (!problem) {
+        alert('Molimo odaberite problem.');
+        return;
+      }
+      if (!message) {
+        alert('Molimo unesite opis problema.');
+        return;
+      }
+
+      fetch('http://localhost:3000/api/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ problem, message })
+      })
+      .then(res => res.json())
+      .then(data => {
+        responseP.textContent = data.message || 'Upit poslan!';
+        document.getElementById('problemSelect').value = "";
+        document.getElementById('messageInput').value = "";
+      })
+      .catch(err => {
+        responseP.style.color = 'red';
+        responseP.textContent = 'Došlo je do greške pri slanju upita.';
+      });
+    }
+
+    renderStep(currentStep);
+  </script>
+</body>
+</html>
